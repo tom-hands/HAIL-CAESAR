@@ -551,6 +551,8 @@ private:
 
   // KAtharine
   int variable_m_value_flag = 0;
+  //TOH: flag to determine if M is spatially explicit
+  int spat_topmodel_m_value_flag = 0;
 
   // TO DO: DAV - these could be read from an input file.
   // Swale grainsizes
@@ -615,6 +617,7 @@ private:
   TNT::Array2D<double> grain;
   TNT::Array2D<double> elev_diff;
   TNT::Array2D<double> spat_var_mannings;
+  TNT::Array2D<double> spat_topmodel_m; //TOH
 
   TNT::Array2D<int> index;
   TNT::Array2D<int> down_scan;
@@ -735,6 +738,7 @@ private:
   std::string grain_data_file = "";
   std::string bedrock_data_file = "";
   std::string water_init_raster_file = "";
+  std::string spatial_topmodel_m_datafile = ""; //TOH
 
   // input file names #BGS groundwater
   std::string groundwater_boundary_raster_file = "";

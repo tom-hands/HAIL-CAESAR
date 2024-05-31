@@ -156,6 +156,8 @@ void LSDCatchmentModel::load_data()
   LSDRaster hydraulicconductivityR;
   /// Specific Yield
   LSDRaster specificyieldR;
+  /// TOH: For spatial M values
+  LSDRaster spat_topmodel_m_R;
 
   std::string DEM_FILENAME = read_path + "/" + read_fname + "." \
                               + dem_read_extension;
@@ -603,6 +605,36 @@ void LSDCatchmentModel::load_data()
       exit(EXIT_FAILURE);
     }
   }
+
+  //TOH: Load spatial topmodel M value if required
+  if(spat_topmodel_m_value_flag == 1)
+  {
+    std::string spat_topmodel_m_filename = read_path +"/"  + spatial_topmodel_m_datafile;
+    if (!does_file_exist(spat_topmodel_m_filename))
+    {
+      std::cout << "No terrain DEM found by name of: " << spat_topmodel_m_filename
+                << std::endl
+                << "You must supply a correct path and filename "
+                << "in the input parameter file" << std::endl;
+      exit(EXIT_FAILURE);
+    }
+
+    // Read in the elevation raster data from file, setting the elevation LSDRaster
+    // object, 'elevR'
+    try
+    {
+      spat_topmodel_m_R.read_ascii_raster(spat_topmodel_m_filename);
+      TNT::Array2D<double> spat_topmodel_m = spat_topmodel_m_R.get_RasterData_dbl();
+    }
+    catch (...)
+    {
+      std::cout << "Something is wrong with your spatial topmodel M file." << std::endl
+                << "Common causes are: " << std::endl
+                << "1) Data type is not correct" <<
+                   std::endl << "2) Non standard ASCII data format" << std::endl;
+      exit(EXIT_FAILURE);
+    }
+  }
 }
 
 // Reads in grain data from the grain data file,
@@ -978,6 +1010,13 @@ void LSDCatchmentModel::initialise_variables(std::string pname,
       specific_yield_file = value;
       RemoveControlCharactersFromEndOfString(specific_yield_file);
       std::cout << "specific_yield_file: " << specific_yield_file << std::endl;
+    }
+    //TOH
+    else if(lower == "spatial_topmodel_m_file")
+    {
+      spatial_topmodel_m_datafile = value;
+      RemoveControlCharactersFromEndOfString(spatial_topmodel_m_datafile);
+      std::cout << "spatial_topmodel_m_file: " << spatial_topmodel_m_datafile << std::endl;
     }
 
     //=-=-=-=-=-=-=-=-=-=-=-=-=-=
