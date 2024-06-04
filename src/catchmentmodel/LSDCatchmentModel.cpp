@@ -607,8 +607,14 @@ void LSDCatchmentModel::load_data()
   }
 
   //TOH: Load spatial topmodel M value if required
+  //LOads from 2 files, like the hydroindex/rainfall
   if(spat_topmodel_m_value_flag == 1)
   {
+    if(spatially_complex_rainfall == false)
+    {
+      std::cout << "You have selected to use a spatially variant topmodel M, but turned off spatially_complex_rainfall. This is unsupported." << std::endl;
+      exit(EXIT_FAILURE);
+    }
     std::string spat_topmodel_m_filename = read_path +"/"  + spatial_topmodel_m_indexfile;
     if (!does_file_exist(spat_topmodel_m_filename))
     {
@@ -651,13 +657,13 @@ void LSDCatchmentModel::load_data()
 
       std::vector<std::vector<float>> spatial_m_values= read_rainfalldata(spat_topmodel_m_filename);
       TNT::Array2D<int> spat_topmodel_m_indices = spat_topmodel_m_R.get_RasterData_int();
-      spat_topmodel_m = Array2D<double>(spat_topmodel_m_indices.dim1(), spat_topmodel_m_indices.dim2());
-      for(int i = 0; i < spat_topmodel_m.dim1(); i++)
+      spat_topmodel_m = Array2D<double>(spat_topmodel_m_indices.dim1() + 2, spat_topmodel_m_indices.dim2() + 2); //2 extra cells in each dimesion for 0 padding at edges
+      for(int i = 0; i < spat_topmodel_m_indices.dim1(); i++)
       {
-        for(int j = 0; j < spat_topmodel_m.dim2(); j++)
+        for(int j = 0; j < spat_topmodel_m_indices.dim2(); j++)
         {
           std::cout << "Cell " << i << " " << j << " index is " << spat_topmodel_m_indices[i][j] ;
-          spat_topmodel_m[i][j] = spatial_m_values[0][spat_topmodel_m_indices[i][j]];
+          spat_topmodel_m[i+1][j+1] = spatial_m_values[0][spat_topmodel_m_indices[i][j]]; //Solves padding issues (gives us a border of 0s and means this array has the same coords as others)
           std::cout << " gets M value " << spatial_m_values[0][spat_topmodel_m_indices[i][j]] << " " << spat_topmodel_m[i][j] << std::endl;
         }
       }
@@ -665,6 +671,7 @@ void LSDCatchmentModel::load_data()
     catch(const std::exception& e)
     {
       std::cerr << e.what() << '\n';
+      exit(EXIT_FAILURE);
     }
     
   }
@@ -3708,7 +3715,10 @@ void LSDCatchmentModel::topmodel_runoff(double cycle, runoffGrid& runoff)
                           current_rainfall_timestep,
                           rfnum);
   // Calculate runoff for this rainfall grid at this timestep
-  runoff.calculate_runoff(rain_factor, M, jmax, imax, current_raingrid, elev);
+  if(spat_topmodel_m_value_flag)
+    runoff.calculate_runoff(rain_factor, M, jmax, imax, current_raingrid, elev, &spat_topmodel_m);
+  else
+    runoff.calculate_runoff(rain_factor, M, jmax, imax, current_raingrid, elev);
 
   // For checking purposes
 

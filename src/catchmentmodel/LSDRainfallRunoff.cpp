@@ -139,7 +139,8 @@ void runoffGrid::create(int imax, int jmax)
 void runoffGrid::create(int current_rainfall_timestep, int imax, int jmax,
                                 int rain_factor, double M,
                                 const rainGrid& current_rainGrid,
-                                const TNT::Array2D<double>& elevations)
+                                const TNT::Array2D<double>& elevations,
+                                const TNT::Array2D<double>* spatial_m)
 {
   std::cout << "Creating a RUNOFF GRID OBJECT FROM RAINGRID..." << std::endl;
   // set arrays to relevant size for model domain
@@ -149,7 +150,7 @@ void runoffGrid::create(int current_rainfall_timestep, int imax, int jmax,
   old_j_mean_array = TNT::Array2D<double>(imax +2, jmax +2, 0.0);
   new_j_mean_array = TNT::Array2D<double>(imax +2, jmax +2, 0.0);
 
-  calculate_runoff(rain_factor, M, jmax, imax, current_rainGrid, elevations);
+  calculate_runoff(rain_factor, M, jmax, imax, current_rainGrid, elevations, spatial_m);
 }
 
 void runoffGrid::write_runoffGrid_to_raster_file(double xmin,
@@ -171,10 +172,13 @@ void runoffGrid::write_runoffGrid_to_raster_file(double xmin,
   output_runoffgrid.write_double_raster(RUNOFFGRID_FNAME, RUNOFFGRID_EXTENSION); 
 }
 
-
+//TOH I added spatial M as an optional argument that defaults to a nullptr (see corresponding header)
+//this might not be the best way to do it in the long run but for now I wanted to maintain as much of the original
+//code and structure as possible
 void runoffGrid::calculate_runoff(int rain_factor, double M, int jmax, int imax, 
                                   const rainGrid& current_rainGrid, 
-                                  const TNT::Array2D<double>& elevations)
+                                  const TNT::Array2D<double>& elevations,
+                                  const TNT::Array2D<double>* spatial_m)
 {
   //std::cout << "calculate_runoff" << std::endl;
   // DAV addeded pragma for testing 08/2016
@@ -195,7 +199,16 @@ void runoffGrid::calculate_runoff(int rain_factor, double M, int jmax, int imax,
   
         // Variable M value would go here
         // if (variable_m_flag == true) { }
-  
+        double  temp_M = M; //default behaviour: use one M for all cells
+        if(spatial_m != nullptr) //if user provided spatial m as an array, grab the value for this cell
+        {
+            temp_M = (*spatial_m)[m][n];
+            if(m >= (*spatial_m).dim1() || n >= (*spatial_m).dim2() )
+            {
+              std::cout << m <<", "<< n << " is out of bounds!" << (*spatial_m).dim1() << " " << (*spatial_m).dim2()<<std::endl;
+            }
+        }
+            
   
         if (current_rainGrid.get_rainfall(m, n) > 0)
         {
@@ -209,10 +222,10 @@ void runoffGrid::calculate_runoff(int rain_factor, double M, int jmax, int imax,
         // for this time step (TOPMODEL based)
         if (local_rainfall_rate == 0)
         {
-          j_array[m][n] = jo_array[m][n] / (1 + ((jo_array[m][n] * local_time_step) / M));
+          j_array[m][n] = jo_array[m][n] / (1 + ((jo_array[m][n] * local_time_step) /temp_M));
   
-          new_j_mean_array[m][n] = M / local_time_step *
-              std::log(1 + ((jo_array[m][n] * local_time_step) / M));
+          new_j_mean_array[m][n] =temp_M / local_time_step *
+              std::log(1 + ((jo_array[m][n] * local_time_step) /temp_M));
         }
   
         // If there is some rain in this cell, we need to calculate how much
@@ -222,13 +235,16 @@ void runoffGrid::calculate_runoff(int rain_factor, double M, int jmax, int imax,
           //std::cout << "Cell Rainfall Rate is: " << local_rainfall_rate << std::endl;
           
           j_array[m][n] = local_rainfall_rate / (((local_rainfall_rate - jo_array[m][n]) / jo_array[m][n])
-                     * std::exp((0 - local_rainfall_rate) * local_time_step / M) + 1);
+                     * std::exp((0 - local_rainfall_rate) * local_time_step /temp_M) + 1);
   
-          new_j_mean_array[m][n] = (M / local_time_step)
+          new_j_mean_array[m][n] = (temp_M / local_time_step)
                               * std::log(((local_rainfall_rate - jo_array[m][n]) + jo_array[m][n]
                               * std::exp((local_rainfall_rate *local_time_step)
-                                         / M)) / local_rainfall_rate);
+                                         /temp_M)) / local_rainfall_rate);
         }
+
+        /*if(spatial_m != nullptr) //if user provided spatial m as an array, grab the value for this cell
+            std::cout << "Using spatial M " << temp_M << " " << j_array[m][n] << " " << new_j_mean_array[m][n] << std::endl;*/
   
         // Don't want to have negative J_means!
         if (new_j_mean_array[m][n] < 0)

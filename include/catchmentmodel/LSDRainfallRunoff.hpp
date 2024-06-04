@@ -135,12 +135,14 @@ public:
   runoffGrid(int current_rainfall_timestep, int imax, int jmax,
                      int rain_factor, double M,
                      const rainGrid& current_rainGrid,
-                     const TNT::Array2D<double>& elevations)
+                     const TNT::Array2D<double>& elevations,
+                     const TNT::Array2D<double>* spatial_m = nullptr)
   {
     create(current_rainfall_timestep, imax, jmax,
            rain_factor, M,
            current_rainGrid, 
-           elevations);
+           elevations,
+           spatial_m = nullptr);
   }  
 
   //void calculate_catchment_water_inputs(); // Left this is CatchmentModel object for now
@@ -152,7 +154,8 @@ public:
   /// @params Takes a ref to a rainGrid object and the elevations array from LSDCatchmentModel
   void calculate_runoff(int rain_factor, double M, int jmax, int imax, 
                         const rainGrid &current_rainGrid, 
-                        const TNT::Array2D<double>& elevations);
+                        const TNT::Array2D<double>& elevations,
+                        const TNT::Array2D<double>* spatial_m = nullptr);
   
   void write_runoffGrid_to_raster_file(double xmin,
                                        double ymin,
@@ -178,7 +181,7 @@ private:
   void create(int imax, int jmax);
   void create(int current_rainfall_timestep, int imax, int jmax,
          int rain_factor, double M,
-         const rainGrid& current_rainGrid, const TNT::Array2D<double>& elevations);
+         const rainGrid& current_rainGrid, const TNT::Array2D<double>& elevations, const TNT::Array2D<double>* spatial_m = nullptr);
 };
 
 
