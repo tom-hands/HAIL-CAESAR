@@ -183,9 +183,9 @@ void runoffGrid::calculate_runoff(int rain_factor, double M, int jmax, int imax,
   //std::cout << "calculate_runoff" << std::endl;
   // DAV addeded pragma for testing 08/2016
   #pragma omp parallel for            
-  for (int m=1; m<imax; m++)
+  for (int m=1; m<=imax; m++)
   {
-    for (int n=1; n<jmax; n++)
+    for (int n=1; n<=jmax; n++)
     {
       // Do not bother calculating runoff outside the catchment boundaries.
       // I.e. in no data values
