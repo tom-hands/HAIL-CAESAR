@@ -551,8 +551,6 @@ private:
 
   // KAtharine
   int variable_m_value_flag = 0;
-  //TOH: flag to determine if M is spatially explicit
-  int spat_topmodel_m_value_flag = 0;
 
   // TO DO: DAV - these could be read from an input file.
   // Swale grainsizes
@@ -721,6 +719,8 @@ private:
   bool graindata_from_file = false;
 
   bool spatially_complex_rainfall = false;
+  //TOH: flag to determine if M is spatially explicit
+  bool spat_topmodel_m_value_flag = false;
 
   int erode_timestep_type = 0;  // 0 for default based on erosion amount, 1 for basedon hydro timestep
   int hydro_timestep_type = 0;  // 0 for default
@@ -738,7 +738,9 @@ private:
   std::string grain_data_file = "";
   std::string bedrock_data_file = "";
   std::string water_init_raster_file = "";
-  std::string spatial_topmodel_m_datafile = ""; //TOH
+
+  std::string spatial_topmodel_m_datafile = ""; //TOH - this is like the spatial rainfall file, defining N different M values that can be assigned onto the raster below
+  std::string spatial_topmodel_m_indexfile = ""; //TOH this is like the hydroindex file - a "DEM" that defines which of the above values is assigned to each cell
 
   // input file names #BGS groundwater
   std::string groundwater_boundary_raster_file = "";
@@ -766,10 +768,6 @@ private:
   int no_of_iterations;
 
   int tempcycle = 0;
-
-  std::vector< std::vector<float> > raingrid;	 // this is for the rainfall data file
-
-
 
   // Groundwater Option Flags
   bool groundwater_on = false;

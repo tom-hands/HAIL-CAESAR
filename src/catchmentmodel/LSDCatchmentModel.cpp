@@ -609,10 +609,10 @@ void LSDCatchmentModel::load_data()
   //TOH: Load spatial topmodel M value if required
   if(spat_topmodel_m_value_flag == 1)
   {
-    std::string spat_topmodel_m_filename = read_path +"/"  + spatial_topmodel_m_datafile;
+    std::string spat_topmodel_m_filename = read_path +"/"  + spatial_topmodel_m_indexfile;
     if (!does_file_exist(spat_topmodel_m_filename))
     {
-      std::cout << "No terrain DEM found by name of: " << spat_topmodel_m_filename
+      std::cout << "No topmodel M index found by name of: " << spat_topmodel_m_filename
                 << std::endl
                 << "You must supply a correct path and filename "
                 << "in the input parameter file" << std::endl;
@@ -623,8 +623,7 @@ void LSDCatchmentModel::load_data()
     // object, 'elevR'
     try
     {
-      spat_topmodel_m_R.read_ascii_raster(spat_topmodel_m_filename);
-      TNT::Array2D<double> spat_topmodel_m = spat_topmodel_m_R.get_RasterData_dbl();
+      spat_topmodel_m_R.read_ascii_raster_integers(spat_topmodel_m_filename);
     }
     catch (...)
     {
@@ -634,6 +633,40 @@ void LSDCatchmentModel::load_data()
                    std::endl << "2) Non standard ASCII data format" << std::endl;
       exit(EXIT_FAILURE);
     }
+
+    try
+    {
+      std::string spat_topmodel_m_filename = read_path + "/" +  spatial_topmodel_m_datafile;
+      // Check for the file first of all
+      if (!does_file_exist(spat_topmodel_m_filename))
+      {
+        std::cout << "No topmodel m datafile found by name of: "
+                  <<  spat_topmodel_m_filename << std::endl
+                  << "You specified to use a spatial topmodel m, \
+                    \n but no matching file was found. Try again." << std::endl;
+                    exit(EXIT_FAILURE);
+      }
+      std::cout << "Ingesting topmodel M data file: " <<  spat_topmodel_m_filename
+                << " into spatial_m_values" << std::endl;
+
+      std::vector<std::vector<float>> spatial_m_values= read_rainfalldata(spat_topmodel_m_filename);
+      TNT::Array2D<int> spat_topmodel_m_indices = spat_topmodel_m_R.get_RasterData_int();
+      spat_topmodel_m = Array2D<double>(spat_topmodel_m_indices.dim1(), spat_topmodel_m_indices.dim2());
+      for(int i = 0; i < spat_topmodel_m.dim1(); i++)
+      {
+        for(int j = 0; j < spat_topmodel_m.dim2(); j++)
+        {
+          std::cout << "Cell " << i << " " << j << " index is " << spat_topmodel_m_indices[i][j] ;
+          spat_topmodel_m[i][j] = spatial_m_values[0][spat_topmodel_m_indices[i][j]];
+          std::cout << " gets M value " << spatial_m_values[0][spat_topmodel_m_indices[i][j]] << " " << spat_topmodel_m[i][j] << std::endl;
+        }
+      }
+    }
+    catch(const std::exception& e)
+    {
+      std::cerr << e.what() << '\n';
+    }
+    
   }
 }
 
@@ -725,7 +758,7 @@ std::vector< std::vector<float> > LSDCatchmentModel::read_rainfalldata(
   std::cout << "\n\n Loading Spatially Distributed Rainfall File, \
                 the filename is: "
             << FILENAME << std::endl;
-
+  std::vector< std::vector<float> > raingrid; //TOH moved this from class scope to this method so that I can use the function for multiple files. previously raingrid just got larger with every call to this function
   // open the data file
   std::ifstream infile(FILENAME.c_str());
 
@@ -898,6 +931,7 @@ void LSDCatchmentModel::initialise_variables(std::string pname,
       lower[i] = std::tolower(parameter[i]);  // converts to lowercase
     }
 
+
     // get rid of control characters
     value = RemoveControlCharactersFromEndOfString(value);
 
@@ -1012,12 +1046,19 @@ void LSDCatchmentModel::initialise_variables(std::string pname,
       std::cout << "specific_yield_file: " << specific_yield_file << std::endl;
     }
     //TOH
-    else if(lower == "spatial_topmodel_m_file")
+    else if(lower == "spatial_topmodel_m_datafile")
     {
       spatial_topmodel_m_datafile = value;
       RemoveControlCharactersFromEndOfString(spatial_topmodel_m_datafile);
-      std::cout << "spatial_topmodel_m_file: " << spatial_topmodel_m_datafile << std::endl;
+      std::cout << "spatial_topmodel_m_datafile: " << spatial_topmodel_m_datafile << std::endl;
     }
+    else if(lower == "spatial_topmodel_m_indexfile")
+    {
+      spatial_topmodel_m_indexfile = value;
+      RemoveControlCharactersFromEndOfString(spatial_topmodel_m_indexfile);
+      std::cout << "spatial_topmodel_m_indexfile: " << spatial_topmodel_m_indexfile << std::endl;
+    }
+
 
     //=-=-=-=-=-=-=-=-=-=-=-=-=-=
     // Numerical
@@ -1141,6 +1182,11 @@ void LSDCatchmentModel::initialise_variables(std::string pname,
     {
       runoffgrid_fname = value;
       std::cout << "runoffgrid_outfile_name: " << runoffgrid_fname << std::endl;
+    }
+    else if (lower == "spatially_explicit_topmodel_m") //TOH
+    {
+      spat_topmodel_m_value_flag = (value == "yes") ? true : false;
+      std::cout << "spatially_explicit_topmodel_m: " << spat_topmodel_m_value_flag << std::endl;
     }
 
     //=-=-=-=-=-=-=-=-=-=-=-=-=-=
