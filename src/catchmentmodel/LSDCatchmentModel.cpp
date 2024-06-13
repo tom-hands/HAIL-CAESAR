@@ -656,7 +656,7 @@ void LSDCatchmentModel::load_data()
                 << " into spatial_m_values" << std::endl;
 
       std::vector<std::vector<float>> spatial_m_values= read_rainfalldata(spat_topmodel_m_filename);
-      std::cout << "Read " << spatial_m_values[0].size() << " m values" << std::endl;
+      std::cout << "Read " << spatial_m_values[0].size() << " m values." << std::endl;
       TNT::Array2D<int> spat_topmodel_m_indices = spat_topmodel_m_R.get_RasterData_int();
       spat_topmodel_m = Array2D<double>(spat_topmodel_m_indices.dim1() + 2, spat_topmodel_m_indices.dim2() + 2); //2 extra cells in each dimesion for 0 padding at edges
       for(int i = 0; i < spat_topmodel_m_indices.dim1(); i++)
@@ -667,11 +667,19 @@ void LSDCatchmentModel::load_data()
           int index = spat_topmodel_m_indices[i][j];
           if(index >=  spatial_m_values[0].size())
           {
-            std::cout << "No M value with index " <<  index << ". Check your M value input files and try again.";
+            std::cout << "No M value with index " <<  index << ". Check your M value input files and try again."<< std::endl ;
             exit(EXIT_FAILURE);
           }
-          spat_topmodel_m[i+1][j+1] = spatial_m_values[0][spat_topmodel_m_indices[i][j]]; //Solves padding issues (gives us a border of 0s and means this array has the same coords as others)
-          std::cout << " gets M value " << spatial_m_values[0][spat_topmodel_m_indices[i][j]] << " " << spat_topmodel_m[i+1][j+1] << std::endl;
+          else if(index < 0 )
+          {
+            std::cout << "Index is less than 0, assigning no_data value for M." << std::endl;
+            spat_topmodel_m[i+1][j+1] = -9999;
+          }
+          else
+          {
+            spat_topmodel_m[i+1][j+1] = spatial_m_values[0][spat_topmodel_m_indices[i][j]]; //Solves padding issues (gives us a border of 0s and means this array has the same coords as others)
+            std::cout << " gets M value " << spatial_m_values[0][spat_topmodel_m_indices[i][j]] << " " << spat_topmodel_m[i+1][j+1] << std::endl;
+          }
         }
       }
     }
