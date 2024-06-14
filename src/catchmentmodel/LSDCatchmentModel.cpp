@@ -664,21 +664,21 @@ void LSDCatchmentModel::load_data()
         for(int j = 0; j < spat_topmodel_m_indices.dim2(); j++)
         {
           std::cout << "Cell " << i << " " << j << " index is " << spat_topmodel_m_indices[i][j] << std::endl ;
-          int index = spat_topmodel_m_indices[i][j];
-          if(index >=  spatial_m_values[0].size())
+          int index = spat_topmodel_m_indices[i][j] - 1;
+          if(index >  spatial_m_values[0].size())
           {
             std::cout << "No M value with index " <<  index << ". Check your M value input files and try again."<< std::endl ;
             exit(EXIT_FAILURE);
           }
-          else if(index < 0 )
+          else if(index < 1 )
           {
-            std::cout << "Index is less than 0, assigning no_data value for M." << std::endl;
+            std::cout << "Index is less than 1, assigning no_data value for M. Note that these indices start at 1." << std::endl;
             spat_topmodel_m[i+1][j+1] = -9999;
           }
           else
           {
-            spat_topmodel_m[i+1][j+1] = spatial_m_values[0][spat_topmodel_m_indices[i][j]]; //Solves padding issues (gives us a border of 0s and means this array has the same coords as others)
-            std::cout << " gets M value " << spatial_m_values[0][spat_topmodel_m_indices[i][j]] << " " << spat_topmodel_m[i+1][j+1] << std::endl;
+            spat_topmodel_m[i+1][j+1] = spatial_m_values[0][index]; //Solves padding issues (gives us a border of 0s and means this array has the same coords as others)
+            std::cout << " gets M value " << spatial_m_values[0][index] << " " << spat_topmodel_m[i+1][j+1] << std::endl;
           }
         }
       }
