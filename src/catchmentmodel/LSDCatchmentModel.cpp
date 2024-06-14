@@ -665,12 +665,12 @@ void LSDCatchmentModel::load_data()
         {
           std::cout << "Cell " << i << " " << j << " index is " << spat_topmodel_m_indices[i][j] << std::endl ;
           int index = spat_topmodel_m_indices[i][j] - 1;
-          if(index >  spatial_m_values[0].size())
+          if(index >=  spatial_m_values[0].size())
           {
-            std::cout << "No M value with index " <<  index << ". Check your M value input files and try again."<< std::endl ;
+            std::cout << "No M value with index " <<  spat_topmodel_m_indices[i][j] << ". Check your M value input files and try again."<< std::endl ;
             exit(EXIT_FAILURE);
           }
-          else if(index < 1 )
+          else if(index < 0)
           {
             std::cout << "Index is less than 1, assigning no_data value for M. Note that these indices start at 1." << std::endl;
             spat_topmodel_m[i+1][j+1] = -9999;
