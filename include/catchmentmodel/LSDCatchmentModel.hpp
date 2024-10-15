@@ -722,6 +722,9 @@ private:
   //TOH: flag to determine if M is spatially explicit
   bool spat_topmodel_m_value_flag = false;
 
+  //TOH: flag to determing if potential evapotranspiration is used
+  bool pet_flag = false;
+
   int erode_timestep_type = 0;  // 0 for default based on erosion amount, 1 for basedon hydro timestep
   int hydro_timestep_type = 0;  // 0 for default
 
@@ -741,6 +744,8 @@ private:
 
   std::string spatial_topmodel_m_datafile = ""; //TOH - this is like the spatial rainfall file, defining N different M values that can be assigned onto the raster below
   std::string spatial_topmodel_m_indexfile = ""; //TOH this is like the hydroindex file - a "DEM" that defines which of the above values is assigned to each cell
+
+  std::string spatial_pet_datafile = ""; //TOH this is again like spatial rainfall: defining evapotransporation of every cell across the length of the simulation
 
   // input file names #BGS groundwater
   std::string groundwater_boundary_raster_file = "";

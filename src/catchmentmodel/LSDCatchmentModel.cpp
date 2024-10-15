@@ -606,6 +606,38 @@ void LSDCatchmentModel::load_data()
     }
   }
 
+  //TOH: Load spatial PET value if required
+  if(pet_flag)
+  {
+    if(spatially_complex_rainfall == false)
+    {
+      std::cout << "You have selected to use a potential evapotranspiration, but turned off spatially_complex_rainfall. This is unsupported." << std::endl;
+      exit(EXIT_FAILURE);
+    }
+    try
+    {
+      std::string pet_filename = read_path + "/" +  spatial_pet_datafile;
+      // Check for the file first of all
+      if (!does_file_exist(pet_filename))
+      {
+        std::cout << "No PET datafile found by name of: "
+                  <<  pet_filename << std::endl
+                  << "You specified to use a spatial topmodel m, \
+                    \n but no matching file was found. Try again." << std::endl;
+                    exit(EXIT_FAILURE);
+      }
+      std::cout << "Ingesting PET data file: " <<  pet_filename
+                << " into spatial_pet_values" << std::endl;
+
+      std::vector<std::vector<float>> spatial_pet_values= read_rainfalldata(pet_filename);
+    }
+    catch(const std::exception& e)
+    {
+      std::cerr << e.what() << '\n';
+      exit(EXIT_FAILURE);
+    }
+  }
+
   //TOH: Load spatial topmodel M value if required
   //LOads from 2 files, like the hydroindex/rainfall
   if(spat_topmodel_m_value_flag == 1)
@@ -1080,6 +1112,12 @@ void LSDCatchmentModel::initialise_variables(std::string pname,
       RemoveControlCharactersFromEndOfString(spatial_topmodel_m_indexfile);
       std::cout << "spatial_topmodel_m_indexfile: " << spatial_topmodel_m_indexfile << std::endl;
     }
+    else if(lower == "spatial_pet_datafile ")
+    {
+      spatial_pet_datafile = value;
+      RemoveControlCharactersFromEndOfString(spatial_pet_datafile);
+      std::cout << "spatial_pet_datafile: " << spatial_pet_datafile << std::endl;
+    }
 
 
     //=-=-=-=-=-=-=-=-=-=-=-=-=-=
@@ -1209,6 +1247,11 @@ void LSDCatchmentModel::initialise_variables(std::string pname,
     {
       spat_topmodel_m_value_flag = (value == "yes") ? true : false;
       std::cout << "spatially_explicit_topmodel_m: " << spat_topmodel_m_value_flag << std::endl;
+    }
+    else if (lower == "use_pet") //TOH
+    {
+      pet_flag = (value == "yes") ? true : false;
+      std::cout << "use_pet: " << pet_flag << std::endl;
     }
 
     //=-=-=-=-=-=-=-=-=-=-=-=-=-=
