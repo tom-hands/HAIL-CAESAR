@@ -606,37 +606,6 @@ void LSDCatchmentModel::load_data()
     }
   }
 
-  //TOH: Load spatial PET value if required
-  if(pet_flag)
-  {
-    if(spatially_complex_rainfall == false)
-    {
-      std::cout << "You have selected to use a potential evapotranspiration, but turned off spatially_complex_rainfall. This is unsupported." << std::endl;
-      exit(EXIT_FAILURE);
-    }
-    try
-    {
-      std::string pet_filename = read_path + "/" +  spatial_pet_datafile;
-      // Check for the file first of all
-      if (!does_file_exist(pet_filename))
-      {
-        std::cout << "No PET datafile found by name of: "
-                  <<  pet_filename << std::endl
-                  << "You specified to use a spatial topmodel m, \
-                    \n but no matching file was found. Try again." << std::endl;
-                    exit(EXIT_FAILURE);
-      }
-      std::cout << "Ingesting PET data file: " <<  pet_filename
-                << " into spatial_pet_values" << std::endl;
-
-      std::vector<std::vector<float>> spatial_pet_values= read_rainfalldata(pet_filename);
-    }
-    catch(const std::exception& e)
-    {
-      std::cerr << e.what() << '\n';
-      exit(EXIT_FAILURE);
-    }
-  }
 
   //TOH: Load spatial topmodel M value if required
   //LOads from 2 files, like the hydroindex/rainfall
@@ -722,6 +691,39 @@ void LSDCatchmentModel::load_data()
     }
     
   }
+
+    //TOH: Load spatial PET value if required
+  if(pet_flag)
+  {
+    if(spatially_complex_rainfall == false)
+    {
+      std::cout << "You have selected to use a potential evapotranspiration, but turned off spatially_complex_rainfall. This is unsupported." << std::endl;
+      exit(EXIT_FAILURE);
+    }
+    try
+    {
+      std::string pet_filename = read_path + "/" +  spatial_pet_datafile;
+      // Check for the file first of all
+      if (!does_file_exist(pet_filename))
+      {
+        std::cout << "No PET datafile found by name of: "
+                  <<  pet_filename << std::endl
+                  << "You specified to use a spatial topmodel m, \
+                    \n but no matching file was found. Try again." << std::endl;
+                    exit(EXIT_FAILURE);
+      }
+      std::cout << "Ingesting PET data file: " <<  pet_filename
+                << " into spatial_pet_values" << std::endl;
+
+      spatial_pet_data = read_rainfalldata(pet_filename);
+    }
+    catch(const std::exception& e)
+    {
+      std::cerr << e.what() << '\n';
+      exit(EXIT_FAILURE);
+    }
+  }
+
 }
 
 // Reads in grain data from the grain data file,
@@ -1112,7 +1114,7 @@ void LSDCatchmentModel::initialise_variables(std::string pname,
       RemoveControlCharactersFromEndOfString(spatial_topmodel_m_indexfile);
       std::cout << "spatial_topmodel_m_indexfile: " << spatial_topmodel_m_indexfile << std::endl;
     }
-    else if(lower == "spatial_pet_datafile ")
+    else if(lower == "spatial_pet_datafile")
     {
       spatial_pet_datafile = value;
       RemoveControlCharactersFromEndOfString(spatial_pet_datafile);
@@ -1250,6 +1252,7 @@ void LSDCatchmentModel::initialise_variables(std::string pname,
     }
     else if (lower == "use_pet") //TOH
     {
+      std::cout << "pet value " << value << std::endl;
       pet_flag = (value == "yes") ? true : false;
       std::cout << "use_pet: " << pet_flag << std::endl;
     }
@@ -6140,7 +6143,7 @@ void LSDCatchmentModel::wpgw_water_input()
 
 void LSDCatchmentModel::groundwater_flow(double time)
 {
-    // std::cout << "Calculating GROUNDWATER FLOW..." << "\n";
+    std::cout << "Calculating GROUNDWATER FLOW..." << "\n";
     double HydroCond_mt;
     double v;               //hydro diffusivity
     double D = 0;           //cell reynolds number
@@ -6207,7 +6210,15 @@ void LSDCatchmentModel::groundwater_flow(double time)
                     //if SLiM isn't run set recharge to a % rainfall mm/d
                     if (!groundwater_SLiM) dailyRech[x][y] = ((hourly_rain_data[(int)(cycle / rain_data_time_step)][rfarea[x][y]]) * 24) * recharge_rate; /** mm/h to mm/d */
                     // NEED TO REMOVE RECHARGE FROM RAINFALL IN CAESAR CODE
-
+                    
+                    if(pet_flag) //TOH
+                    {
+                      std::cout << "pet " << x << " " << y << std::endl;
+                      float pet = (spatial_pet_data[(int)(cycle / rain_data_time_step)][rfarea[x][y]]);
+                      dailyRech[x][y] -= pet;
+                      if(dailyRech[x][y] <0)
+                        dailyRech[x][y] = 0;
+                    }
                     GWHeads[x][y] += (dailyRech[x][y]*0.001) / (dtime * SY[x][y]); //recharge added to GWL (m)
 
                 }

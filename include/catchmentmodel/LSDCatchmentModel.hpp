@@ -642,6 +642,7 @@ private:
   TNT::Array2D<bool> inputpointsarray;
 
   std::vector< std::vector<float> > hourly_rain_data;
+  std::vector< std::vector<float> > spatial_pet_data; //TOH
   std::vector<std::vector<std::vector<float> > > inputfile;
   //TNT::Array3D<double> inputfile;
   std::vector<double> stage_inputfile;
