@@ -251,7 +251,9 @@ void runoffGrid::calculate_runoff(int rain_factor, double M, int jmax, int imax,
           double pet_value = current_pet_grid.get_rainfall(m,n)/(1000 * 3600);
           //TOH: this is a quick hack so we can test that this vaguely works. Doing this properly involves changing the exponential equations above
           //DO NOT USE THIS IN PRODUCTION SIMULATIONS IF YOU FIND YOURSELF IN POSESSION OF IT
+          double j_old = j_array[m][n];
           j_array[m][n] -= local_time_step * pet_value;
+          std::cout << "Remove PET at rate " << pet_value << " new j " << j_array[m][n] << " " << j_old << std::endl; 
           if(j_array[m][n] < 0)
             j_array[m][n] = 0;
         }
