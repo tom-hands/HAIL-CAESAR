@@ -136,6 +136,7 @@ void runoffGrid::create(int imax, int jmax)
 
 // Same as abouve but calculates values for runoff matrices given raingrid and a timestep
 //  and other relevant params.
+//TOH I don't think this is ever used so I haven't updated it to account for PET but it would need to be updated to take the PET grid if needed...
 void runoffGrid::create(int current_rainfall_timestep, int imax, int jmax,
                                 int rain_factor, double M,
                                 const rainGrid& current_rainGrid,
@@ -175,6 +176,7 @@ void runoffGrid::write_runoffGrid_to_raster_file(double xmin,
 //TOH I added spatial M as an optional argument that defaults to a nullptr (see corresponding header)
 //this might not be the best way to do it in the long run but for now I wanted to maintain as much of the original
 //code and structure as possible
+//TOH this paper is very useful for understanding what's going on here: https://link.springer.com/content/pdf/10.1007/978-94-009-4678-1_3.pdf?utm_source=chatgpt.com
 void runoffGrid::calculate_runoff(int rain_factor, double M, int jmax, int imax, 
                                   const rainGrid& current_rainGrid, 
                                   const TNT::Array2D<double>& elevations,
@@ -241,6 +243,17 @@ void runoffGrid::calculate_runoff(int rain_factor, double M, int jmax, int imax,
                               * std::log(((local_rainfall_rate - jo_array[m][n]) + jo_array[m][n]
                               * std::exp((local_rainfall_rate *local_time_step)
                                          /temp_M)) / local_rainfall_rate);
+        }
+
+        if(pet_updated)
+        {
+          // Provided in mm/hr. Divide by 1000 to get m/hr, then 3600 for m/sec
+          double pet_value = current_pet_grid.get_rainfall(m,n)/(1000 * 3600);
+          //TOH: this is a quick hack so we can test that this vaguely works. Doing this properly involves changing the exponential equations above
+          //DO NOT USE THIS IN PRODUCTION SIMULATIONS IF YOU FIND YOURSELF IN POSESSION OF IT
+          j_array[m][n] -= local_time_step * pet_value;
+          if(j_array[m][n] < 0)
+            j_array[m][n] = 0;
         }
 
         /*if(spatial_m != nullptr) //if user provided spatial m as an array, grab the value for this cell

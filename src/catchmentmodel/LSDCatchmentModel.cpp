@@ -3775,6 +3775,16 @@ void LSDCatchmentModel::topmodel_runoff(double cycle, runoffGrid& runoff)
                           imax, jmax,
                           current_rainfall_timestep,
                           rfnum);
+
+  if(pet_flag)
+  {
+    //TOH this just creates another raingrid like above, but the runoff object owns it rather than us
+    runoff.update_pet_grid(spatial_pet_data, rfarea,
+                            imax, jmax,
+                            current_rainfall_timestep,
+                            rfnum);
+  }
+
   // Calculate runoff for this rainfall grid at this timestep
   if(spat_topmodel_m_value_flag)
     runoff.calculate_runoff(rain_factor, M, jmax, imax, current_raingrid, elev, &spat_topmodel_m);
@@ -6211,7 +6221,7 @@ void LSDCatchmentModel::groundwater_flow(double time)
                     if (!groundwater_SLiM) dailyRech[x][y] = ((hourly_rain_data[(int)(cycle / rain_data_time_step)][rfarea[x][y]]) * 24) * recharge_rate; /** mm/h to mm/d */
                     // NEED TO REMOVE RECHARGE FROM RAINFALL IN CAESAR CODE
                     
-                    if(pet_flag) //TOH
+                    if(pet_flag && false) //TOH false is just here to make sure this doesn't execute until I work out where to move it to
                     {
                       std::cout << "pet " << x << " " << y << std::endl;
                       float pet = (spatial_pet_data[(int)(cycle / rain_data_time_step)][rfarea[x][y]]);
