@@ -716,6 +716,10 @@ void LSDCatchmentModel::load_data()
                 << " into spatial_pet_values" << std::endl;
 
       spatial_pet_data = read_rainfalldata(pet_filename);
+      for(int i = 0; i < spatial_pet_data.size(); i++)
+      {
+        //std::cout<< "length of pet data for timestep " << i << " is " << spatial_pet_data[i].size() <<std::endl;
+      }
     }
     catch(const std::exception& e)
     {
@@ -3776,16 +3780,16 @@ void LSDCatchmentModel::topmodel_runoff(double cycle, runoffGrid& runoff)
                           current_rainfall_timestep,
                           rfnum);
 
-  rainGrid * pet_grid_pointer = nullptr;
+
   TNT::Array2D<double>* spatial_topmodel_m_pointer = nullptr;
+  std::shared_ptr<rainGrid> pet_grid_pointer = nullptr;
   if(pet_flag)
   {
     //TOH this just creates another raingrid like above, but we send it as aa delicious pointer
-    rainGrid pet_grid = rainGrid(spatial_pet_data, rfarea,
+    pet_grid_pointer.reset(new rainGrid(spatial_pet_data, rfarea,
                             imax, jmax,
                             current_rainfall_timestep,
-                            rfnum);
-    pet_grid_pointer = &pet_grid; //TOH: I hate this way of doing this , but I need it done quickly and don't want to change too much fo declan's code
+                            rfnum)); //TOH: I hate this way of doing this , but I need it done quickly and don't want to change too much fo declan's code
   }
 
   if(spat_topmodel_m_value_flag)

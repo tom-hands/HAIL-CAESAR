@@ -181,10 +181,11 @@ void runoffGrid::calculate_runoff(int rain_factor, double M, int jmax, int imax,
                                   const rainGrid& current_rainGrid, 
                                   const TNT::Array2D<double>& elevations,
                                   const TNT::Array2D<double>* spatial_m,
-                                  const rainGrid* pet_grid )
+                                  const shared_ptr<rainGrid> pet_grid )
 {
   //std::cout << "calculate_runoff" << std::endl;
   // DAV addeded pragma for testing 08/2016
+
   #pragma omp parallel for            
   for (int m=1; m<=imax; m++)
   {
@@ -253,8 +254,9 @@ void runoffGrid::calculate_runoff(int rain_factor, double M, int jmax, int imax,
           //TOH: this is a quick hack so we can test that this vaguely works. Doing this properly involves changing the exponential equations above
           //DO NOT USE THIS IN PRODUCTION SIMULATIONS IF YOU FIND YOURSELF IN POSESSION OF IT
           double j_old = j_array[m][n];
-          j_array[m][n] -= local_time_step * pet_value;
-          std::cout << "Remove PET at rate " << pet_value << " new j " << j_array[m][n] << " " << j_old << std::endl; 
+          j_array[m][n] -= pet_value; //pet is m/second, j should also be m/second??
+          if(pet_value > 0 && j_old > 0)
+            std::cout << "Remove PET at rate " << pet_value << " new j " << j_array[m][n] << " old j " << j_old << std::endl; 
           if(j_array[m][n] < 0)
             j_array[m][n] = 0;
         }

@@ -20,6 +20,7 @@
 #ifndef LSDRAINFALLRUNOFF_H
 #define LSDRAINFALLRUNOFF_H
 
+#include <memory>
 #include "TNT/tnt.h"
 #include "topotools/LSDStatsTools.hpp" // This contains some spline interpolation functions already
 
@@ -155,7 +156,7 @@ public:
   void calculate_runoff(int rain_factor, double M, int jmax, int imax, 
                         const rainGrid &current_rainGrid, 
                         const TNT::Array2D<double>& elevations,
-                        const TNT::Array2D<double>* spatial_m = nullptr, const rainGrid* pet_grid = nullptr);
+                        const TNT::Array2D<double>* spatial_m = nullptr, const shared_ptr<rainGrid> pet_grid = nullptr);
   
   void write_runoffGrid_to_raster_file(double xmin,
                                        double ymin,
