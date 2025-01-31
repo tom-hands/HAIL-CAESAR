@@ -155,7 +155,7 @@ public:
   void calculate_runoff(int rain_factor, double M, int jmax, int imax, 
                         const rainGrid &current_rainGrid, 
                         const TNT::Array2D<double>& elevations,
-                        const TNT::Array2D<double>* spatial_m = nullptr);
+                        const TNT::Array2D<double>* spatial_m = nullptr, const rainGrid* pet_grid = nullptr);
   
   void write_runoffGrid_to_raster_file(double xmin,
                                        double ymin,
@@ -163,13 +163,7 @@ public:
                                        std::string RUNOFFGRID_FNAME,
                                        std::string RUNOFFGRID_EXTENSION);
 
-  void update_pet_grid( std::vector< std::vector<float> >& spatial_pet_data,
-            TNT::Array2D<int>& hydroindex,
-           int imax, int jmax, int current_rainfall_timestep, int rf_num) //TOH this implementation should be moved to a CPP file but for now I just need it to work
-  {
-    current_pet_grid = rainGrid(spatial_pet_data,hydroindex,imax,jmax,current_rainfall_timestep, rf_num);
-    pet_updated = true; //mark this so that the calculate_rainfall knows it needs to do something with it
-  }
+
   // Getters for runoff variables
   double get_j(int m, int n) const { return j_array[m][n]; }
   double get_jo(int m, int n) const { return jo_array[m][n]; }
@@ -183,8 +177,6 @@ public:
 
 protected:
   TNT::Array2D<double> j_array, jo_array, j_mean_array, old_j_mean_array, new_j_mean_array;
-  rainGrid current_pet_grid; //TOH: store the petgrid in this class so we don't have to keep passing around pointers/nullptr if the PET feature is turned off
-  bool pet_updated = false;
 private:
   void create(int imax, int jmax);
   void create(int current_rainfall_timestep, int imax, int jmax,

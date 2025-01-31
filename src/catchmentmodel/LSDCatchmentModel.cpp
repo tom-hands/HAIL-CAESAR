@@ -664,22 +664,22 @@ void LSDCatchmentModel::load_data()
       {
         for(int j = 0; j < spat_topmodel_m_indices.dim2(); j++)
         {
-          std::cout << "Cell " << i << " " << j << " index is " << spat_topmodel_m_indices[i][j] << " - ";
+          //std::cout << "Cell " << i << " " << j << " index is " << spat_topmodel_m_indices[i][j] << " - ";
           int index = spat_topmodel_m_indices[i][j] - 1;
           if(index >=  (int)spatial_m_values[0].size()) //int case is needed or comparison is true for large negative index
           {
-            std::cout << "No M value with index " <<  spat_topmodel_m_indices[i][j] <<  " (" << index << "). Check your M value input files and try again."<< std::endl ;
+            //std::cout << "No M value with index " <<  spat_topmodel_m_indices[i][j] <<  " (" << index << "). Check your M value input files and try again."<< std::endl ;
             exit(EXIT_FAILURE);
           }
           else if(index < 0)
           {
-            std::cout << "Index is less than 1, assigning no_data value for M. Note that these indices start at 1." << std::endl;
+            //std::cout << "Index is less than 1, assigning no_data value for M. Note that these indices start at 1." << std::endl;
             spat_topmodel_m[i+1][j+1] = -9999;
           }
           else
           {
             spat_topmodel_m[i+1][j+1] = spatial_m_values[0][index]; //Solves padding issues (gives us a border of 0s and means this array has the same coords as others)
-            std::cout << " gets M value " << spatial_m_values[0][index] << " " << spat_topmodel_m[i+1][j+1] << std::endl;
+            //std::cout << " gets M value " << spatial_m_values[0][index] << " " << spat_topmodel_m[i+1][j+1] << std::endl;
           }
         }
       }
@@ -3776,20 +3776,27 @@ void LSDCatchmentModel::topmodel_runoff(double cycle, runoffGrid& runoff)
                           current_rainfall_timestep,
                           rfnum);
 
+  rainGrid * pet_grid_pointer = nullptr;
+  TNT::Array2D<double>* spatial_topmodel_m_pointer = nullptr;
   if(pet_flag)
   {
-    //TOH this just creates another raingrid like above, but the runoff object owns it rather than us
-    runoff.update_pet_grid(spatial_pet_data, rfarea,
+    //TOH this just creates another raingrid like above, but we send it as aa delicious pointer
+    rainGrid pet_grid = rainGrid(spatial_pet_data, rfarea,
                             imax, jmax,
                             current_rainfall_timestep,
                             rfnum);
+    pet_grid_pointer = &pet_grid; //TOH: I hate this way of doing this , but I need it done quickly and don't want to change too much fo declan's code
+  }
+
+  if(spat_topmodel_m_value_flag)
+  {
+    spatial_topmodel_m_pointer = &spat_topmodel_m;
   }
 
   // Calculate runoff for this rainfall grid at this timestep
-  if(spat_topmodel_m_value_flag)
-    runoff.calculate_runoff(rain_factor, M, jmax, imax, current_raingrid, elev, &spat_topmodel_m);
-  else
-    runoff.calculate_runoff(rain_factor, M, jmax, imax, current_raingrid, elev);
+
+  runoff.calculate_runoff(rain_factor, M, jmax, imax, current_raingrid, elev, spatial_topmodel_m_pointer, pet_grid_pointer);
+
 
   // For checking purposes
 

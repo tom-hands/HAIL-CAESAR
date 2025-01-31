@@ -180,7 +180,8 @@ void runoffGrid::write_runoffGrid_to_raster_file(double xmin,
 void runoffGrid::calculate_runoff(int rain_factor, double M, int jmax, int imax, 
                                   const rainGrid& current_rainGrid, 
                                   const TNT::Array2D<double>& elevations,
-                                  const TNT::Array2D<double>* spatial_m)
+                                  const TNT::Array2D<double>* spatial_m,
+                                  const rainGrid* pet_grid )
 {
   //std::cout << "calculate_runoff" << std::endl;
   // DAV addeded pragma for testing 08/2016
@@ -245,10 +246,10 @@ void runoffGrid::calculate_runoff(int rain_factor, double M, int jmax, int imax,
                                          /temp_M)) / local_rainfall_rate);
         }
 
-        if(pet_updated)
+        if(pet_grid != nullptr)
         {
           // Provided in mm/hr. Divide by 1000 to get m/hr, then 3600 for m/sec
-          double pet_value = current_pet_grid.get_rainfall(m,n)/(1000 * 3600);
+          double pet_value = pet_grid->get_rainfall(m,n)/(1000 * 3600);
           //TOH: this is a quick hack so we can test that this vaguely works. Doing this properly involves changing the exponential equations above
           //DO NOT USE THIS IN PRODUCTION SIMULATIONS IF YOU FIND YOURSELF IN POSESSION OF IT
           double j_old = j_array[m][n];
